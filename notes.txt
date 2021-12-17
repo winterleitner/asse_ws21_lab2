@@ -1,0 +1,19 @@
+
+You are tasked with restoring a secret key for the Creative Marketing Management Director. The key is very important to him, as it is the password for his beloved YouTube channel where he provides innovative entrepreneurs with valuable tips regarding creative and effective marketing in large-scale businesses.
+Unfortunately, he forgot it and just remembers that accidentally on one screen recording it was visible as his colleague Agile Business Strategy Executive pointed out to him a few weeks ago. The original video was stored in an encrypted backup for which he lost the password, but thankfully, he also kept an unencrypted copy of the stream. Sadly, it has been corrupted because of his innovative security by obscurity concept...
+
+Hint:
+
+In order to view the provided stream it has to be embedded into an appropriate container format (e.g., via "MP4Box -add stream.h264 stream.mp4" [2]). For watching, VLC [3] is recommended.
+
+A h264 byte stream consists of NAL units which are prefixed with a byte sequence (see section B.1.1 in [1]). The structure of a NAL unit is specified in section 7.3.1 in [1].
+
+An unknown number of NAL-Units are malformed with respect to the excerpt listed below. Additionally, the type of corruption (encoded movement, missing reference images) suggests a problem with the so-called "IDR pictures".
+
+"
+nal_ref_idc shall not be equal to 0 for NAL units with nal_unit_type equal to 5.
+nal_ref_idc shall be equal to 0 for all NAL units having nal_unit_type equal to 6, 9, 10, 11, or 12.
+"
+[1] https://www.itu.int/rec/T-REC-H.264-202108-I/en
+[2] https://github.com/gpac/gpac/wiki/MP4Box
+[3] https://www.videolan.org/vlc/
