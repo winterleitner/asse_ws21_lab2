@@ -114,42 +114,14 @@ def findNALs(filename):
 
 
 def replace_error_nals(filename, target_filename):
+    # [^0](0{5}|0{7})1(..)
     with open(target_filename, "wb") as output:
         with open(filename, "rb", ) as h264_file:
             myline = h264_file.read()
             formatted_str = to_str(myline)
-            corrected = formatted_str
-
-            # ToDo find proper position of IDR frames
-            # corrected = nth_repl_all(corrected, "000000167", "000000165", 2)  # set IDR frames every 2nd of 67
-
             corrected = re.sub(r'(0{5,7}1)6a', r"\g<1>65", formatted_str)  # set as IDR frame
-            # corrected = re.sub(r'(0{5,7}1)6a', r"\g<1>0a", formatted_str)
-            # corrected = re.sub(r'(0{5,7}1)41', r"\g<1>45", corrected)  # unit type 2 to 5
-            # corrected = re.sub(r'(0{5,7}1)67', r"\g<1>65", corrected)  # unit type 7 to 5
-            # corrected = re.sub(r'(0{5,7}1)67', r"\g<1>65", corrected)  # unit type 7 to 5
-            corrected = re.sub(r'(0{5,7}1)80', r"\g<1>00", corrected)  # fixes forbidden zero
-            corrected = re.sub(r'(0{5,7}1)d4', r"\g<1>54", corrected)
-            corrected = re.sub(r'(0{5,7}1)d8', r"\g<1>58", corrected)
-
             output.write(bytearray.fromhex(corrected))
 
-
-def nth_repl_all(s, sub, repl, nth):
-    find = s.find(sub)
-    # loop util we find no match
-    i = 1
-    while find != -1:
-        # if i is equal to nth we found nth matches so replace
-        if i == nth:
-            s = s[: find] + repl + s[find + len(sub): ]
-            i = 0
-        # find + len(sub) + 1 means we start after the last match
-        find = s.find(sub, find + len(sub) + 1)
-        i += 1
-    return s
-
-#[^0](0{5}|0{7})1(..)
 
 
 def check_hash(filename, expected_sha1):
@@ -161,8 +133,8 @@ def check_hash(filename, expected_sha1):
             text = file.readline()
             m.update(text)
 
-    calculated_hash = m.digest()
-    print(f"Calculated SHA1: {to_str(calculated_hash)}")
+    calculated_hash = to_str(m.digest())
+    print(f"Calculated SHA1: {calculated_hash}")
     print(f"Expected SHA1:   {expected_sha1}")
     if calculated_hash == expected_sha1:
         print("Success")
@@ -184,9 +156,7 @@ if __name__ == '__main__':
     target_filename = "gen_stream.h264"
 
     findNALs(source_filename)
-    # findNALs(target_filename)
 
-    #find_type_5(target_filename)
     replace_error_nals(source_filename, target_filename)
 
     sha1_hash = "0f8ef8f4956ac57b7a84c0b6273fb7bfdc9ed96f"  # valid SHA1 for stream.h264
