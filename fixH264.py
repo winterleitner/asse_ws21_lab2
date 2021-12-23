@@ -93,6 +93,8 @@ def replace_error_nals(filename, target_filename):
             corrected = re.sub(r'(0{5,7}1)6a', r"\g<1>0a", formatted_str)
             #corrected = re.sub(r'(0{5,7}1)41', r"\g<1>45", corrected) makes it worse
             corrected = re.sub(r'(0{5,7}1)80', r"\g<1>00", corrected)
+            corrected = re.sub(r'(0{5,7}1)d4', r"\g<1>54", corrected)
+            corrected = re.sub(r'(0{5,7}1)d8', r"\g<1>58", corrected)
             output.write(bytearray.fromhex(corrected))
 
 #[^0](0{5}|0{7})1(..)
@@ -146,8 +148,8 @@ def find_type_5(filename):
 
 
 if __name__ == '__main__':
-    filename = "stream.h264"
-    findNALs("stream.h264")
+    filename = "1_stream.h264"
+    findNALs(filename)
     #find_type_5(filename)
     #replace_error_nals(filename, f"1_{filename}")
 
