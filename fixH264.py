@@ -26,27 +26,33 @@ def to_str(byte_str):
 
 
 def get_nal_type(nal):
+    """Gets the NAL type as int from a hex NAL"""
     binary = bin(int(nal, 16))[2:].zfill(8)
     return int(binary[3:], 2)
 
 def get_ref_idc(nal):
+    """Gets the ref idc as in from a hex NAL"""
     binary = bin(int(nal, 16))[2:].zfill(8)
     return int(binary[1:3], 2)
 
+def to_binary(nal):
+    return bin(int(nal, 16))[2:].zfill(8)
+
 
 def checkNAL(nal, error = False):
+    """Checks if a hex nal is valid and returns a tuple of True|False and if false a binary suggested corrected NAL, else None"""
     binary = bin(int(nal, 16))[2:].zfill(8)
     forbidden_zero = binary[0]
     if forbidden_zero != "0":
-        print(f"Forbidden Zero not zero for {nal}")
+        print(f"\nForbidden Zero not zero for {nal}")
         return checkNAL(hex(int(f"0{binary[1:]}", 2)), True)
     nal_ref_idc = int(binary[1:3], 2)
     nal_unit_type = int(binary[3:], 2)
-    if nal_unit_type in [5, 7, 8, 13, 15] and nal_ref_idc == 0:
-        print(f"Wrong IDC for {nal} with type {nal_unit_type}")
+    if nal_unit_type in (5, 7, 8, 13, 15) and nal_ref_idc == 0:
+        print(f"\nWrong IDC for {nal} with type {nal_unit_type}")
         ret = False, f"001{binary[4:]}"
-    if nal_unit_type in [6, 9, 10, 11, 12] and nal_ref_idc != 0:
-        print(f"Wrong IDC for {nal} with type {nal_unit_type}")
+    if nal_unit_type in (6, 9, 10, 11, 12) and nal_ref_idc != 0:
+        print(f"\nWrong IDC for {nal} with type {nal_unit_type}")
         return False, f"000{binary[4:]}"
     if error:
         return False, binary
@@ -54,22 +60,26 @@ def checkNAL(nal, error = False):
 
 
 def findNALs(filename):
+    """Finds all NALs and applies correction to them."""
     with open(filename, "rb", ) as mp4_file:
         myline = mp4_file.read()
         formatted_str = to_str(myline)
         correct = 0
         wrong = 0
-        for m in re.finditer('[^0](0{5}|0{7})1(..)', formatted_str):
+        prev = 0
+        for m in re.finditer('(0{5}|0{7})1(..)', formatted_str):
             #if m.end() % 2 != 0:
             #    continue
             passed, correction = checkNAL(m.group(2))
             if passed:
-                print(f"{m.group(0)[1:]}: {get_nal_type(m.group(2))} - {get_ref_idc(m.group(2))}")
+                #print(f"{m.group(0)[1:]}: {get_nal_type(m.group(2))} - {get_ref_idc(m.group(2))} - {m.start() - prev}")
+                print(f"{m.group(0)[1:]}\t{to_binary(m.group(2))}\t{get_nal_type(m.group(2))}\t{get_ref_idc(m.group(2))}")
                 correct += 1
             else:
                 print(f"NAL: {m.group(0)[1:]} @ {m.start()} should be {m.group(0)[1:-2]}{hex(int(correction, 2))}")
                 print()
                 wrong += 1
+            prev = m.start()
 
         print(f"Correct: {correct}")
         print(f"Wrong: {wrong}")
@@ -81,6 +91,8 @@ def replace_error_nals(filename, target_filename):
             myline = mp4_file.read()
             formatted_str = to_str(myline)
             corrected = re.sub(r'(0{5,7}1)6a', r"\g<1>0a", formatted_str)
+            #corrected = re.sub(r'(0{5,7}1)41', r"\g<1>45", corrected) makes it worse
+            corrected = re.sub(r'(0{5,7}1)80', r"\g<1>00", corrected)
             output.write(bytearray.fromhex(corrected))
 
 #[^0](0{5}|0{7})1(..)
@@ -120,13 +132,23 @@ def matthias():
             print("Fail")
 
 
+# no type 5 present
 def find_type_5(filename):
-    return
+    with open(filename, "rb", ) as mp4_file:
+        myline = mp4_file.read()
+        formatted_str = to_str(myline)
+    for m in re.finditer('(0{5}|0{7})1(..)', formatted_str):
+        # if m.end() % 2 != 0:
+        #    continue
+        passed, correction = checkNAL(m.group(2))
+        if passed and get_nal_type(m.group(2)) == "5":
+            print(f"{m.group(0)[1:]}: {get_nal_type(m.group(2))} - {get_ref_idc(m.group(2))}")
 
 
 if __name__ == '__main__':
     filename = "stream.h264"
     findNALs("stream.h264")
+    #find_type_5(filename)
     #replace_error_nals(filename, f"1_{filename}")
 
 
