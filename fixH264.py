@@ -99,39 +99,22 @@ def replace_error_nals(filename, target_filename):
 
 #[^0](0{5}|0{7})1(..)
 
-def matthias():
-    filename = "stream.h264"
-    sha1_hash = "0f8ef8f4956ac57b7a84c0b6273fb7bfdc9ed96f"  # valid SHA1 for stream.h264
 
+def check_hash(filename, expected_sha1):
     m = hashlib.sha1()
+    with open(filename, "rb", ) as file:
+        text = file.readline()
+        m.update(text)
+        while text:
+            text = file.readline()
+            m.update(text)
 
-    with open("gen_stream.h264", "wb") as output:
+    calculated_hash = m.digest()
+    print(f"Calculated SHA1: {to_str(calculated_hash)}")
+    print(f"Expected SHA1:   {expected_sha1}")
+    if calculated_hash == expected_sha1:
+        print("Success")
 
-        start_found = False
-        with open(filename, "rb", ) as mp4_file:
-            myline = mp4_file.read(16)
-            while myline:
-                m.update(myline)
-                formatted_str = to_str(myline)
-                blocks_of_four = [formatted_str[i:i + 4] for i in range(0, len(formatted_str), 4)]
-
-                for block in blocks_of_four:
-                    if start_found:
-                        print(f"{block} ")
-
-                    if "0000" in block:
-                        start_found = True
-
-                output.write(myline)
-                myline = mp4_file.read(16)
-
-        calculated_hash = m.digest()
-        print(to_str(calculated_hash))
-
-        if sha1_hash == calculated_hash:
-            print("Success")
-        else:
-            print("Fail")
 
 
 # no type 5 present
@@ -148,10 +131,15 @@ def find_type_5(filename):
 
 
 if __name__ == '__main__':
-    filename = "1_stream.h264"
-    findNALs(filename)
-    #find_type_5(filename)
-    #replace_error_nals(filename, f"1_{filename}")
+    source_filename = "stream.h264"
+    findNALs(source_filename)
+
+    target_filename = "gen_stream.h264"
+    #find_type_5(target_filename)
+    replace_error_nals(source_filename, target_filename)
+
+    sha1_hash = "0f8ef8f4956ac57b7a84c0b6273fb7bfdc9ed96f"  # valid SHA1 for stream.h264
+    check_hash(target_filename, sha1_hash)
 
 
 
