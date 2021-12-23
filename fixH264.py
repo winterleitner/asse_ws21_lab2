@@ -121,10 +121,12 @@ def replace_error_nals(filename, target_filename):
             corrected = formatted_str
 
             # ToDo find proper position of IDR frames
-            corrected = nth_repl_all(corrected, "000000167", "000000165", 2)  # set IDR frames every 2nd of 67
+            # corrected = nth_repl_all(corrected, "000000167", "000000165", 2)  # set IDR frames every 2nd of 67
 
-            corrected = re.sub(r'(0{5,7}1)6a', r"\g<1>0a", formatted_str)
+            corrected = re.sub(r'(0{5,7}1)6a', r"\g<1>65", formatted_str)  # set as IDR frame
+            # corrected = re.sub(r'(0{5,7}1)6a', r"\g<1>0a", formatted_str)
             # corrected = re.sub(r'(0{5,7}1)41', r"\g<1>45", corrected)  # unit type 2 to 5
+            # corrected = re.sub(r'(0{5,7}1)67', r"\g<1>65", corrected)  # unit type 7 to 5
             # corrected = re.sub(r'(0{5,7}1)67', r"\g<1>65", corrected)  # unit type 7 to 5
             corrected = re.sub(r'(0{5,7}1)80', r"\g<1>00", corrected)  # fixes forbidden zero
             corrected = re.sub(r'(0{5,7}1)d4', r"\g<1>54", corrected)
@@ -182,6 +184,7 @@ if __name__ == '__main__':
     target_filename = "gen_stream.h264"
 
     findNALs(source_filename)
+    # findNALs(target_filename)
 
     #find_type_5(target_filename)
     replace_error_nals(source_filename, target_filename)
